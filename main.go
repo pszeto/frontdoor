@@ -107,11 +107,9 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 		if err = json.Indent(&prettyJSON, body, "", "\t"); err != nil {
 			log.Printf("Failed Parsing JSON Body: %v", err)
 			failedBody = true
-			log.Printf("Response:")
-			fmt.Println(string(body))
+			log.Printf("Response:\n" + string(body))
 		} else {
-			log.Printf("Response:")
-			log.Printf("\n" + prettyJSON.String())
+			log.Printf("Response:\n" + prettyJSON.String())
 		}
 
 		if err = json.Compact(&compactJSON, body); err != nil {
