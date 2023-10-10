@@ -66,7 +66,8 @@ func status(w http.ResponseWriter, req *http.Request) {
 }
 
 func handleRequest(w http.ResponseWriter, req *http.Request) {
-	log.Printf("Handling request : %s %s %s %s headers(%s)\n", hostname, req.Host, req.Method, req.URL.Path, req.Header)
+
+	log.Printf("Handling %s request : %s %s %s %s headers(%s)\n", req.Proto, hostname, req.Host, req.Method, req.URL.Path, req.Header)
 	w.Header().Add("x-server", hostname)
 	w.Header().Set("Content-Type", "application/json")
 	resp := make(map[string]string)
