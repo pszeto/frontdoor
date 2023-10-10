@@ -2,8 +2,9 @@ kind: ConfigMap
 apiVersion: v1 
 metadata:
   name: frontdoor-config
-  namespace: frontdoor 
+  namespace: echo 
 data:
   config.yaml: |
-    httpbin.echo: httpbin.echo
-    echo.echo: echo.echo
+    httpbin.echo: httpbin.echo:80
+    echo-http.echo: echo.echo:8080
+    echo-https.echo: echo.echo:8443

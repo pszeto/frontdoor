@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontdoor
-  namespace: frontdoor
+  namespace: echo
   labels:
     app: frontdoor
 spec:
@@ -16,16 +16,19 @@ spec:
         app: frontdoor
     spec:
       containers:
-      - name: generic-server
+      - name: frontdoor
         image: docker.io/pszeto/frontdoor
         imagePullPolicy: Always
         env:
-        - name: PORT
-          value: "8000"
+        - name: HTTP_PORT
+          value: "8080"
+        - name: HTTPS_PORT
+          value: "8443"
         - name: CONfIG_DIR
           value: "/etc/config/frontdoor"
         ports:
-        - containerPort: 8000
+        - containerPort: 8080
+        - containerPort: 8443
         volumeMounts:
           - mountPath: /etc/config/frontdoor
             name: frontdoor-config

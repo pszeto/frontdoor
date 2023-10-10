@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -67,6 +68,7 @@ func status(w http.ResponseWriter, req *http.Request) {
 func handleRequest(w http.ResponseWriter, req *http.Request) {
 	log.Printf("Handling request : %s %s %s %s headers(%s)\n", hostname, req.Host, req.Method, req.URL.Path, req.Header)
 	w.Header().Add("x-server", hostname)
+	w.Header().Set("Content-Type", "application/json")
 	resp := make(map[string]string)
 
 	address := config[req.Host]
@@ -85,7 +87,7 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 	r.Host = req.Host
 	//r.Header.Add("host", req.Host)
 	r.Header.Add("x-server", hostname)
-	log.Printf("Making http request: %s with host %sn", requestURL, r.Host)
+	log.Printf("Making http request: %s with host %s\n", requestURL, r.Host)
 	res, err := client.Do(r)
 	if err != nil {
 		log.Printf("Error making http request: %s\n", err)
@@ -97,9 +99,33 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	body, _ := ioutil.ReadAll(res.Body)
+	var prettyJSON bytes.Buffer
+	var compactJSON bytes.Buffer
+	var failedBody = false
 	log.Printf("Http request: %s - StatusCode: %d", requestURL, res.StatusCode)
+	if len(body) > 0 {
+		if err = json.Indent(&prettyJSON, body, "", "\t"); err != nil {
+			log.Printf("Failed Parsing JSON Body: %v", err)
+			failedBody = true
+			log.Printf("Response:")
+			fmt.Println(string(body))
+		} else {
+			log.Printf("Response:")
+			log.Printf("\n" + prettyJSON.String())
+		}
+
+		if err = json.Compact(&compactJSON, body); err != nil {
+			log.Printf("Failed Compacting JSON Body: %v", err)
+		}
+	} else {
+		log.Printf("Body: No Body Supplied\n")
+	}
 	resp["message"] = "success"
-	resp["upstream-response"] = string(body)
+	if failedBody {
+		resp["upstream-response"] = string(body)
+	} else {
+		resp["upstream-response"] = compactJSON.String()
+	}
 	jsonResp, _ := json.Marshal(resp)
 	w.Write(jsonResp)
 }
@@ -149,7 +175,7 @@ func main() {
 	http.HandleFunc("/status", status)
 	http.HandleFunc("/", handleRequest)
 
-	log.Println("Version 0.1")
+	log.Println("Version 0.2")
 
 	errs := Run(httpPort, httpsPort, map[string]string{
 		"cert": "server.crt",

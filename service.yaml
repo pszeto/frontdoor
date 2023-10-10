@@ -2,7 +2,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: frontdoor
-  namespace: frontdoor
+  namespace: echo
 spec:
   selector:
     app: frontdoor
