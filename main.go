@@ -82,7 +82,7 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	log.Printf("Found host mapping for: %s - Address : %s", req.Host, address)
-	requestURL := fmt.Sprintf("http://%s%s", address, req.URL.Path)
+	requestURL := fmt.Sprintf("%s%s", address, req.URL.Path)
 	client := &http.Client{}
 	r, _ := http.NewRequest(req.Method, requestURL, req.Body)
 	r.Host = req.Host

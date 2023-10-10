@@ -5,6 +5,6 @@ metadata:
   namespace: echo 
 data:
   config.yaml: |
-    httpbin.echo: httpbin.echo:80
-    echo-http.echo: echo.echo:8080
-    echo-https.echo: echo.echo:8443
+    httpbin.echo: http://httpbin.echo:80
+    echo-http.echo: http://echo.echo:8080
+    echo-https.echo: https://echo.echo:8443
