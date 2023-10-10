@@ -1,2 +1,2 @@
-httpbin.echo: httpbin.org
+httpbin.echo: http://httpbin.org
 echo.echo: echo.echo

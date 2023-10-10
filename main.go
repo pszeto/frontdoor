@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -82,8 +83,12 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	log.Printf("Found host mapping for: %s - Address : %s", req.Host, address)
-	requestURL := fmt.Sprintf("%s%s", address, req.URL.Path)
-	client := &http.Client{}
+	requestURL := fmt.Sprintf("%s%s", address, req.RequestURI)
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+
 	r, _ := http.NewRequest(req.Method, requestURL, req.Body)
 	r.Host = req.Host
 	//r.Header.Add("host", req.Host)
