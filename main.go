@@ -72,6 +72,8 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 	w.Header().Add("x-server", hostname)
 	w.Header().Set("Content-Type", "application/json")
 	resp := make(map[string]string)
+	xfp := req.Header.Get("x-forwarded-proto")
+	log.Printf("x-forwarded-proto: %s", xfp)
 
 	address := config[req.Host]
 	if address == "" {
@@ -93,6 +95,12 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 	r.Host = req.Host
 	//r.Header.Add("host", req.Host)
 	r.Header.Add("x-server", hostname)
+
+	if xfp != "https" {
+		xfp = "http"
+	}
+
+	r.Header.Add("x-original-forwarded-proto", xfp)
 	log.Printf("Making http request: %s with host %s\n", requestURL, r.Host)
 	res, err := client.Do(r)
 	if err != nil {
@@ -140,7 +148,7 @@ func Run(addr string, sslAddr string, ssl map[string]string) chan error {
 
 	// Starting HTTP server
 	go func() {
-		log.Printf("Staring HTTP service on %s ...", addr)
+		log.Printf("Staring HTTP service on %s", addr)
 
 		if err := http.ListenAndServe(addr, nil); err != nil {
 			errs <- err
@@ -150,7 +158,7 @@ func Run(addr string, sslAddr string, ssl map[string]string) chan error {
 
 	// Starting HTTPS server
 	go func() {
-		log.Printf("Staring HTTPS service on %s ...", sslAddr)
+		log.Printf("Staring HTTPS service on %s", sslAddr)
 		if err := http.ListenAndServeTLS(sslAddr, ssl["cert"], ssl["key"], nil); err != nil {
 			errs <- err
 		}
@@ -179,7 +187,7 @@ func main() {
 	http.HandleFunc("/status", status)
 	http.HandleFunc("/", handleRequest)
 
-	log.Println("Version 0.2")
+	log.Println("Version 0.3")
 
 	errs := Run(httpPort, httpsPort, map[string]string{
 		"cert": "server.crt",
