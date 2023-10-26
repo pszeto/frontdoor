@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 )
 
@@ -103,7 +104,17 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 	rewriteXFP, ok := os.LookupEnv("REWRITE_X_FORWARD_PROTO")
 	if ok {
 		if rewriteXFP == "true" {
+			log.Printf("Adding x-original-forwarded-proto (%s) to http request", xfp)
 			r.Header.Add("x-original-forwarded-proto", xfp)
+		}
+	}
+
+	addXRequestId, ok := os.LookupEnv("ADD_X_REQUEST_ID")
+	if ok {
+		if addXRequestId == "true" {
+			requestId := uuid.New()
+			log.Printf("Adding x-request-id (%s) to http request", requestId.String()+"-peter")
+			r.Header.Add("x-request-id", requestId.String()+"-peter")
 		}
 	}
 

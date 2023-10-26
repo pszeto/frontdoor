@@ -28,6 +28,8 @@ spec:
           value: "/etc/config/frontdoor"
         - name: REWRITE_X_FORWARD_PROTO
           value: "true"
+        - name: ADD_X_REQUEST_ID
+          value: "true"
         ports:
         - containerPort: 8080
         - containerPort: 8443
