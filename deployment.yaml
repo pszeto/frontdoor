@@ -12,6 +12,8 @@ spec:
       app: frontdoor
   template:
     metadata:
+      annotations:
+        prometheus.istio.io/merge-metrics: "false"
       labels:
         app: frontdoor
     spec:
