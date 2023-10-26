@@ -100,7 +100,13 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 		xfp = "http"
 	}
 
-	r.Header.Add("x-original-forwarded-proto", xfp)
+	rewriteXFP, ok := os.LookupEnv("REWRITE_X_FORWARD_PROTO")
+	if ok {
+		if rewriteXFP == "true" {
+			r.Header.Add("x-original-forwarded-proto", xfp)
+		}
+	}
+
 	log.Printf("Making http request: %s with host %s\n", requestURL, r.Host)
 	res, err := client.Do(r)
 	if err != nil {
