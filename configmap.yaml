@@ -8,3 +8,4 @@ data:
     httpbin.echo: http://httpbin.echo:80
     echo-http.echo: http://echo.echo:8080
     echo-https.echo: https://echo.echo:8443
+    httpbin.external: http://httpbin.org

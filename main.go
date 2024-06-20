@@ -5,10 +5,11 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -36,7 +37,7 @@ func init() {
 	}
 	log.Printf("Configuration File : %s", configFile)
 	// read hostname name mapping to
-	yfile, err := ioutil.ReadFile(configFile)
+	yfile, err := os.ReadFile(configFile)
 
 	if err != nil {
 		log.Fatalf("Error opening config.yaml. Err: %s", err)
@@ -86,11 +87,39 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	log.Printf("Found host mapping for: %s - Address : %s", req.Host, address)
-	requestURL := fmt.Sprintf("%s%s", address, req.RequestURI)
+	uriOverride := req.Header.Get("x-uri-override")
+	log.Printf("x-uri-override: %s", uriOverride)
+	httpTimeoutOverride := req.Header.Get("x-http-timeout")
+	log.Printf("x-http-timeout: %s", httpTimeoutOverride)
+	var requestURL string
+	if len(uriOverride) > 0 {
+		if uriOverride == "remove" {
+			requestURL = fmt.Sprintf("%s%s", address, "")
+		} else {
+			requestURL = fmt.Sprintf("%s%s", address, uriOverride)
+		}
+	} else {
+		requestURL = fmt.Sprintf("%s%s", address, req.RequestURI)
+	}
+
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	client := &http.Client{Transport: tr}
+	var timeoutOverride int
+	if len(httpTimeoutOverride) > 0 {
+		valueHttpTimeoutOverride, err := strconv.Atoi(httpTimeoutOverride)
+		if err != nil {
+			log.Printf("x-http-timeout is not a number: %s", httpTimeoutOverride)
+		} else {
+			timeoutOverride = valueHttpTimeoutOverride
+		}
+	} else {
+		timeoutOverride = 15
+	}
+	client := &http.Client{
+		Transport: tr,
+		Timeout:   time.Duration(timeoutOverride) * time.Second,
+	}
 
 	r, _ := http.NewRequest(req.Method, requestURL, req.Body)
 	r.Host = req.Host
@@ -129,7 +158,7 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 		w.Write(jsonResp)
 		return
 	}
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 	var prettyJSON bytes.Buffer
 	var compactJSON bytes.Buffer
 	var failedBody = false
@@ -204,7 +233,7 @@ func main() {
 	http.HandleFunc("/status", status)
 	http.HandleFunc("/", handleRequest)
 
-	log.Println("Version 0.3")
+	log.Println("Version 0.5")
 
 	errs := Run(httpPort, httpsPort, map[string]string{
 		"cert": "server.crt",
